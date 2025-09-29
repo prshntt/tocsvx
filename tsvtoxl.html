@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TSV to CSV/XLSX/TXT Converter</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    label, select, button { margin-top: 10px; display: block; }
+    #output { margin-top: 20px; white-space: pre; background: #f9f9f9; padding: 10px; border: 1px solid #ccc; }
+  </style> -->
+</head>
+<body style="text-align: center;">
+  <h1>TSV Converter</h1>
+  <input type="file" id="tsvFile" accept=".tsv,.txt">
+  <label for="formatSelect">Convert to:</label>
+  <select id="formatSelect">
+    <option value="csv">CSV</option>
+    <option value="xlsx">XLSX</option>
+    <option value="txt">TXT</option>
+  </select>
+  <button onclick="convertTSV()">Convert & Download</button>
+
+  <script>
+    function convertTSV() {
+      const fileInput = document.getElementById('tsvFile');
+      const format = document.getElementById('formatSelect').value;
+
+      if (!fileInput.files.length) {
+        alert('Please select a TSV file.');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const tsvData = e.target.result;
+        const rows = tsvData.split('\n').map(row => row.split('\t'));
+
+        if (format === 'csv') {
+          const csvContent = rows.map(r => r.map(field => '"' + field.replace(/"/g, '""') + '"').join(',')).join('\n');
+          downloadFile(csvContent, 'converted.csv', 'text/csv');
+
+        } else if (format === 'txt') {
+          const txtContent = rows.map(r => r.join('\t')).join('\n');
+          downloadFile(txtContent, 'converted.txt', 'text/plain');
+
+        } else if (format === 'xlsx') {
+          const wb = XLSX.utils.book_new();
+          const ws = XLSX.utils.aoa_to_sheet(rows);
+          XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+          XLSX.writeFile(wb, 'converted.xlsx');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function downloadFile(content, filename, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
